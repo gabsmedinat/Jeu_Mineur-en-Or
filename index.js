@@ -97,6 +97,7 @@ const initNiveau = ()=>{
 }
 
 const dessinerNiveau = () => {
+    
     for(cellule of tabObjCellules){
         let debutCellule_X = cellule.positionX;
         let debutCellule_Y = cellule.positionY;
@@ -118,21 +119,35 @@ const dessinerNiveau = () => {
                 objContexte.fillRect(2*longeurCellule/10+ecartEntreBetons,2*ecartEntreBetons+hauteurCellule/3,7*longeurCellule/10,hauteurCellule/3);
 
                 objContexte.restore();
-                
                 break;
-                case "echelle":
 
-                    objContexte.save();
-                    objContexte.translate(debutCellule_X,debutCellule_Y);
-                    objContexte.fillStyle = "#8A7650";
-                    objContexte.fillRect(0,0,longeurCellule/7,hauteurCellule);
-                    objContexte.fillRect(6*longeurCellule/7,0,longeurCellule/7,hauteurCellule);
-                    for(let i=0;i<4;i++){
-                        objContexte.fillRect(0,i*hauteurCellule/4+ecartEntreBetons,longeurCellule,hauteurCellule/20);
-                    }
-                
-                    objContexte.restore();  
-                    break;
+            case "echelle":
+                objContexte.save();
+                objContexte.translate(debutCellule_X,debutCellule_Y);
+                objContexte.fillStyle = "#8A7650";
+                objContexte.fillRect(0,0,longeurCellule/7,hauteurCellule);
+                objContexte.fillRect(6*longeurCellule/7,0,longeurCellule/7,hauteurCellule);
+                for(let i=0;i<4;i++){
+                    objContexte.fillRect(0,i*hauteurCellule/4+ecartEntreBetons,longeurCellule,hauteurCellule/20);
+                }
+                objContexte.restore();  
+                break;
+            case "barre":
+                objContexte.save();
+                objContexte.translate(debutCellule_X,debutCellule_Y);
+                objContexte.fillStyle = "#8A7650";
+                objContexte.fillRect(0,hauteurCellule/30+ecartEntreBetons,longeurCellule,hauteurCellule/20);
+                objContexte.restore();  
+                break;
+            case "brique":
+                objContexte.save();
+                objContexte.translate(debutCellule_X,debutCellule_Y);
+                objContexte.fillStyle = "gray";
+                objContexte.fillRect(0,0,longeurCellule,hauteurCellule);
+                objContexte.fillStyle = "#57595B";
+                objContexte.fillRect(ecartEntreBetons,ecartEntreBetons,longeurCellule-2*ecartEntreBetons,hauteurCellule-3*ecartEntreBetons);
+                objContexte.restore();
+                break;
         }
     }
     
