@@ -2,7 +2,9 @@
 
 
 var objCanvas = null;
+
 var objContexte = null;
+
 
 var objNiveau;
 var tabObjCellules;
@@ -35,6 +37,8 @@ var niveau = [
 
 const init = ()=>{
     objCanvas = document.getElementById("canvasJeu");
+    // objCanvas.width = window.innerWidth;
+    // objCanvas.height = window.innerHeight;
     objContexte = objCanvas.getContext("2d");
 
     objContexte.fillStyle = "black";  // Fond 
@@ -94,13 +98,13 @@ const initNiveau = ()=>{
 
 const dessinerNiveau = () => {
     for(cellule of tabObjCellules){
+        let debutCellule_X = cellule.positionX;
+        let debutCellule_Y = cellule.positionY;
+        let longeurCellule = cellule.longeur;
+        let hauteurCellule = cellule.hauteur;
+        let ecartEntreBetons = hauteurCellule/10;
         switch(cellule.type){
             case "beton":
-                let debutCellule_X = cellule.positionX;
-                let debutCellule_Y = cellule.positionY;
-                let longeurCellule = cellule.longeur;
-                let hauteurCellule = cellule.hauteur;
-                let ecartEntreBetons = hauteurCellule/10;
                 objContexte.save();
                 objContexte.translate(debutCellule_X,debutCellule_Y);
                 
@@ -116,8 +120,22 @@ const dessinerNiveau = () => {
                 objContexte.restore();
                 
                 break;
+                case "echelle":
+
+                    objContexte.save();
+                    objContexte.translate(debutCellule_X,debutCellule_Y);
+                    objContexte.fillStyle = "#8A7650";
+                    objContexte.fillRect(0,0,longeurCellule/7,hauteurCellule);
+                    objContexte.fillRect(6*longeurCellule/7,0,longeurCellule/7,hauteurCellule);
+                    for(let i=0;i<4;i++){
+                        objContexte.fillRect(0,i*hauteurCellule/4+ecartEntreBetons,longeurCellule,hauteurCellule/20);
+                    }
+                
+                    objContexte.restore();  
+                    break;
         }
     }
+    
 
 }
 
@@ -127,6 +145,16 @@ const obtenirTypeCellule = (intLigne, intColonne) => {
     for(cellule of tabObjCellules){
         if(cellule.ligne == li && cellule.colonne == col){
             return cellule.type;
+        }
+    }
+}
+
+const transformerCellule = (intLigne, intColonne, strType) => {
+    let li = intLigne ;
+    let col = intColonne ;
+    for(cellule of tabObjCellules){
+        if(cellule.ligne == li && cellule.colonne == col){
+            cellule.type = strType;
         }
     }
 }
