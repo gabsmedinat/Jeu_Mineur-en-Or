@@ -45,6 +45,8 @@ const init = ()=>{
     objContexte.fillRect(0,0,objCanvas.width, objCanvas.height);
     initNiveau();
     dessinerNiveau(); 
+    dessinerLingots();
+
 }
 
 
@@ -66,7 +68,6 @@ const initNiveau = ()=>{
             objCellule.hauteur = objCanvas.height/17;
             objCellule.positionX = x*objCellule.longeur;
             objCellule.positionY = y*objCellule.hauteur;
-            
 
             typeCellule = objNiveau.tableau[y][x];
             switch(typeCellule){
@@ -90,6 +91,10 @@ const initNiveau = ()=>{
                     objCellule.type = "brique";
                     objCellule.binDisponible = false;
                     break;
+                case 5:
+                    objCellule.type = "lingots";
+                    objCellule.binDisponible = false;
+                    break;
             }
             tabObjCellules.push(objCellule);
         }
@@ -97,7 +102,7 @@ const initNiveau = ()=>{
 }
 
 const dessinerNiveau = () => {
-    
+dessinerLingots()
     for(cellule of tabObjCellules){
         let debutCellule_X = cellule.positionX;
         let debutCellule_Y = cellule.positionY;
@@ -148,10 +153,92 @@ const dessinerNiveau = () => {
                 objContexte.fillRect(ecartEntreBetons,ecartEntreBetons,longeurCellule-2*ecartEntreBetons,hauteurCellule-3*ecartEntreBetons);
                 objContexte.restore();
                 break;
+            case "lingots":
+                objContexte.save();
+                objContexte.save();
+                
+                let stepX = longeurCellule / 14;
+                let stepY = hauteurCellule / 10;
+                let couleur_OrClair = "#FFF985";
+                let couleur_OrMoyen = "#FFEC27";
+                let couleur_OrFonce = "#FFD300";
+                let couleur_OrTFonce = "#FFA300";
+                
+                objContexte.save();
+                objContexte.translate(debutCellule_X,debutCellule_Y)
+                objContexte.translate(0, hauteurCellule); 
+                objContexte.scale(1, -1);
+
+                objContexte.fillStyle = couleur_OrClair;
+                objContexte.fillRect(0,0,stepX,stepY);
+                objContexte.fillRect(2*stepX,0,stepX,stepY);
+                objContexte.fillRect(stepX,0+stepY,stepX,stepY);
+                objContexte.fillRect(2*stepX,0+stepY,stepX,stepY);
+                objContexte.fillRect(2*stepX,0+2*stepY,stepX,stepY);
+                objContexte.fillRect(3*stepX,0+2*stepY,stepX,stepY);
+                objContexte.fillRect(3*stepX,0+3*stepY,stepX,stepY);
+                objContexte.fillRect(4*stepX,0+3*stepY,stepX,stepY);
+                objContexte.fillRect(4*stepX,0+4*stepY,stepX,stepY);
+                objContexte.fillRect(5*stepX,0+4*stepY,stepX,stepY);
+                objContexte.fillRect(5*stepX,0+5*stepY,stepX,stepY);
+
+
+                objContexte.fillStyle = couleur_OrMoyen;
+                objContexte.fillRect(0+stepX,0,stepX,stepY);
+                objContexte.fillRect(0+3*stepX,0,2*stepX,stepY);
+                objContexte.fillRect(0+6*stepX,0,stepX,stepY);
+                objContexte.fillRect(0+3*stepX,0+stepY,stepX,stepY);
+                objContexte.fillRect(0+5*stepX,0+stepY,stepX,stepY);
+                objContexte.fillRect(0+6*stepX,0+2*stepY,stepX,stepY);
+                objContexte.fillRect(0+5*stepX,0+3*stepY,3*stepX,stepY);
+
+                
+                objContexte.fillStyle = couleur_OrFonce;
+                objContexte.fillRect(0+5*stepX,0,stepX,stepY);
+                objContexte.fillRect(0+7*stepX,0,stepX,stepY);
+                objContexte.fillRect(0+4*stepX,0+stepY,stepX,stepY);
+                objContexte.fillRect(0+4*stepX,0+2*stepY,stepX,stepY);
+                objContexte.fillRect(0+6*stepX,0+stepY,5*stepX,stepY);
+                objContexte.fillRect(0+7*stepX,0+2*stepY,3*stepX,stepY);
+                objContexte.fillRect(0+6*stepX,0+4*stepY,stepX,stepY);
+                objContexte.fillRect(0+7*stepX,0+4*stepY,stepX,stepY);
+                objContexte.fillRect(0+8*stepX,0+3*stepY,stepX,stepY);
+
+                objContexte.fillRect(0+5*stepX,0+2*stepY,stepX,stepY);
+                objContexte.fillRect(0+6*stepX,0+5*stepY,stepX,stepY);
+
+
+                objContexte.fillStyle = couleur_OrTFonce;
+                objContexte.fillRect(0+8*stepX,0,4*stepX,stepY);
+
+                objContexte.restore();
+                break;
+        }
+    }
+}
+
+const dessinerLingots = () => {
+    /* PARCOURIR L'ARRAY DE CELLULES: SI LA CELLULE EST DE TYPE BETON ET LA CELLULE DE DESSUS 
+    EST DU TYPE VIDE, ON PEU DONC PLACER UN LINGOT */
+    let tabCelluleDisponible = new Array();
+    for(cellule of tabObjCellules){
+        let colonne = cellule.colonne;
+        let ligne = cellule.ligne;
+        if(cellule.type =="vide"){
+            for(cel of tabObjCellules){
+                if(colonne == cel.colonne && (cel.ligne - 1) == ligne && cel.type == "beton"){
+                    tabCelluleDisponible.push(cellule)
+                }
+            }
         }
     }
     
-
+    for(let i = 0; i<7; i++){
+        let indexCelluleChoisie = Math.floor(Math.random()*tabCelluleDisponible.length);
+        let celluleChoisie = tabCelluleDisponible[indexCelluleChoisie];
+        transformerCellule(celluleChoisie.ligne, celluleChoisie.colonne, "lingots")
+        celluleChoisie.binDisponible = false;
+    }
 }
 
 const obtenirTypeCellule = (intLigne, intColonne) => {
