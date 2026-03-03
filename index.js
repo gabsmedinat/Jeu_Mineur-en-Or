@@ -49,11 +49,9 @@ const init = ()=>{
 
     window.addEventListener('keydown',ecouter)
 
-    objContexte.fillStyle = "black";  
-    // objContexte.fillRect(0,0,objCanvas.width, objCanvas.height);
     initNiveau();
     initMineur();
-    dessinerLingots()
+    dessinerLingots();
     dessinerNiveau(); 
     animer();
 }
@@ -62,22 +60,39 @@ const ecouter = () =>{
     switch(event.key){
         case "ArrowUp":
         case "w":
+            objMineur.binDeplacement = true;
             objMineur.positionY -= objMineur.vitesse;
             break;
         case "ArrowDown":
         case "s":
+            objMineur.binDeplacement = true;
             objMineur.positionY += objMineur.vitesse;
             break;
         case "ArrowRight":
         case "d":
+            objMineur.binDeplacement = true;
             objMineur.positionX += objMineur.vitesse;
             break;
         case "ArrowLeft":
         case "a":
+            objMineur.binDeplacement = true;
             objMineur.positionX -= objMineur.vitesse;
+            break;
+        case "x":
+            creuserTrou("droite");
+            break;
+        case "z":
+            creuserTrou("gauche");
+            break;
+        case "o": // Cette touche m'aide juste à connaître la position actuelle du Mineur pour des fins de déboggage
+            console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
             break;
     }
 }
+
+
+
+
 
 const initNiveau = ()=>{
     objNiveau = new Object();
@@ -137,7 +152,7 @@ const initMineur = () =>  {
     objMineur.positionX = coordonneesInitiales[0];
     objMineur.positionY = coordonneesInitiales[1];
 
-    objMineur.vitesse = 10;                                          // TODO: À ajuster une fois en fonction
+    objMineur.vitesse = 1;                                          // TODO: À ajuster une fois en fonction
     objMineur.couleur = ["#FFFFFF","#0AC4E0"];
     objMineur.binChute = false;
     objMineur.binDeplacement = false;                   // TODO: À s'en servir pour l'animation
@@ -145,6 +160,8 @@ const initMineur = () =>  {
     objMineur.binVivant = true;                         // TODO: À utiliser pour la fin du jeu
     objMineur.direction = "droite";                     // TODDO: "droite" sera position par défaut scale(1,1), donc pas de scale. "gauche"=scale(-1,1)
 }
+
+
 
 const dessinerNiveau = () => {
     for(cellule of tabObjCellules){
@@ -261,17 +278,14 @@ const dessinerNiveau = () => {
 }
 
 const dessinerMineur = () => {
-     /* SECTION MINEUR */
     let debutCellule_X = objMineur.positionX;
     let debutCellule_Y = objMineur.positionY;
     let longeurCellule = objCanvas.width/28;
     let hauteurCellule = objCanvas.height/17;
- 
-    
     let stepX = longeurCellule / 14;
     let stepY = hauteurCellule / 10;
     let couleurMineurCorps = objMineur.couleur[0];
-    let couleurMineurChapeau = objMineur.couleur[1];
+    let couleurMineurChapeau = objMineur.couleur[1]; 
     
     objContexte.save();
     objContexte.translate(debutCellule_X,debutCellule_Y)
@@ -283,6 +297,7 @@ const dessinerMineur = () => {
     // objContexte.scale(-1,1);
 
     objContexte.fillStyle = couleurMineurCorps;
+    
     objContexte.fillRect(7*stepX,0,stepX,stepY);
     objContexte.fillRect(7*stepX,stepY,stepX,stepY);
     objContexte.fillRect(7*stepX,2*stepY,stepX/2,stepY/2);
@@ -326,8 +341,8 @@ const dessinerLingots = () => {
 
 
 const obtenirTypeCellule = (intLigne, intColonne) => {
-    let li = intLigne ;
-    let col = intColonne ;
+    let li = intLigne;
+    let col = intColonne;
     for(cellule of tabObjCellules){
         if(cellule.ligne == li && cellule.colonne == col){
             return cellule.type;
@@ -346,6 +361,13 @@ const obtenirCoordonneesCellule = (intLigne, intColonne) => {
     }
 }
 
+/* Cette fonction retourne la ligne et la colonne actuelle de l'objet qui applique la méthode */
+const obtenirPositionCellule = (fltPosX, fltPosY) => {
+    var colonne = Math.ceil(fltPosX / 20) +1 ;
+    var ligne = Math.ceil(fltPosY / 20) +1;
+    return [ligne,colonne];
+}
+
 const transformerCellule = (intLigne, intColonne, strType) => {
     let li = intLigne ;
     let col = intColonne ;
@@ -353,10 +375,24 @@ const transformerCellule = (intLigne, intColonne, strType) => {
         if(cellule.ligne == li && cellule.colonne == col){
             cellule.type = strType;
             (strType!="vide")?cellule.binDisponible=false:cellule.binDisponible = true;
-            // console.log(cellule)
         }
     }
 }
+
+/* Fonctionnement: Après d'obtenir la position de la cellule où le Mineur se trouve, si le paramètre recu dans la fonction est "droite", alors je transforme la colonne à droite
+        Si strCote ne vaut pas "droite", je transforme la colonne à gauche. */
+const creuserTrou = (strCote) => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let cote = (strCote=="droite")? 1 : -1;
+    
+    for(cel of tabObjCellules){
+        if(posActuelle[1] == cel.colonne && (cel.ligne - 1) == posActuelle[0] && cel.type == "beton"){
+            
+            transformerCellule(cel.ligne,cel.colonne+cote,"vide")
+        }
+    }
+}
+
 
 
 const effacer = () => {
@@ -368,6 +404,7 @@ const effacer = () => {
 }
 
 const mettreAJour = () => {
+    objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
 
 }
 
