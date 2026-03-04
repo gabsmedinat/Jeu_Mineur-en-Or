@@ -89,6 +89,8 @@ const ecouter = () =>{
         case "o": // Cette touche m'aide juste à connaître la position actuelle du Mineur pour des fins de déboggage
             console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
             break;
+        case "l":
+            console.log(obtenirPositionCelluleDessous(objMineur.celluleActuelle[0],objMineur.celluleActuelle[1]));
     }
 }
 
@@ -371,9 +373,15 @@ const obtenirCoordonneesCellule = (intLigne, intColonne) => {
 
 /* Cette fonction retourne la ligne et la colonne actuelle de l'objet qui applique la méthode */
 const obtenirPositionCellule = (fltPosX, fltPosY) => {
-    var colonne = Math.ceil(fltPosX / 20) +1 ;
-    var ligne = Math.ceil(fltPosY / 20) +1;
-    return [ligne,colonne];
+    var colonne = Math.ceil((fltPosX / 20) + 1);
+    var ligne = Math.floor((fltPosY / 20) +1);
+    return [colonne,ligne];
+}
+
+const obtenirPositionCelluleDessous = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let celDessous = [posActuelle[0],posActuelle[1]+1];
+    return [celDessous[0],celDessous[1]];
 }
 
 const transformerCellule = (intLigne, intColonne, strType) => {
@@ -394,20 +402,43 @@ const creuserTrou = (strCote) => {
     let cote = (strCote=="droite")? 1 : -1;
     
     for(cel of tabObjCellules){
-        if(posActuelle[1] == cel.colonne && (cel.ligne - 1) == posActuelle[0] && cel.type == "beton"){
-            transformerCellule(cel.ligne,cel.colonne+cote,"vide")
+        if(posActuelle[0] == cel.colonne && (cel.ligne - 1) == posActuelle[1] && cel.type == "beton"){
+            transformerCellule(cel.ligne,cel.colonne+cote,"vide");
         }
     }
 }
 
+
 /* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
-const binSolVide = () => {
+const chute = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+    for(cel of tabObjCellules){
+        if(posCelluleDessous[0]==cel.colonne && posCelluleDessous[1]==cel.ligne && cel.type != "beton"){
+            if(cel.type != "echelle" && cel.type != "barre"){
+                objMineur.binDeplacement = true;
+                objMineur.positionY += objMineur.vitesse;
+            }
+        }
+    }
+}
+
+const monterEchelles = () => {
     let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
     
     for(cel of tabObjCellules){
-        if(posActuelle[1] == cel.colonne && (cel.ligne) == posActuelle[0] && cel.type == "vide"){
+        if(posActuelle[0] == cel.colonne && (cel.ligne) == posActuelle[1] && cel.type == "echelle"){
             objMineur.binDeplacement = true;
-            objMineur.positionY += objMineur.vitesse;
+            objMineur.positionY = objMineur.vitesse;
+        }
+    }
+}
+
+const collisionAvecLingot = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    for(cel of tabObjCellules){
+        if(posActuelle[0] == cel.colonne && posActuelle[1] == (cel.ligne ) && cel.type == "lingots"){
+            cel.type = "vide";
         }
     }
 }
@@ -422,8 +453,10 @@ const effacer = () => {
 
 const mettreAJour = () => {
     objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-    binSolVide();
+    chute();
+    collisionAvecLingot();
 }
+
 
 const animer = () => {
     objCycleAnimation = requestAnimationFrame(animer);
