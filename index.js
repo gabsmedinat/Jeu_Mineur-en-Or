@@ -61,22 +61,24 @@ const ecouter = () =>{
         case "ArrowUp":
         case "w":
             objMineur.binDeplacement = true;
-            objMineur.positionY -= objMineur.vitesse;
+            objMineur.positionY -= objMineur.vitesse*5;
             break;
         case "ArrowDown":
         case "s":
             objMineur.binDeplacement = true;
-            objMineur.positionY += objMineur.vitesse;
+            objMineur.positionY += objMineur.vitesse*5;
             break;
         case "ArrowRight":
         case "d":
             objMineur.binDeplacement = true;
-            objMineur.positionX += objMineur.vitesse;
+            objMineur.direction = "droite"
+            objMineur.positionX += objMineur.vitesse*5;
             break;
         case "ArrowLeft":
         case "a":
             objMineur.binDeplacement = true;
-            objMineur.positionX -= objMineur.vitesse;
+            objMineur.direction = "gauche"
+            objMineur.positionX -= objMineur.vitesse*5;
             break;
         case "x":
             creuserTrou("droite");
@@ -288,13 +290,19 @@ const dessinerMineur = () => {
     let couleurMineurChapeau = objMineur.couleur[1]; 
     
     objContexte.save();
-    objContexte.translate(debutCellule_X,debutCellule_Y)
-    objContexte.translate(0, hauteurCellule); 
-    objContexte.scale(1.5, -1.5);
+    if(objMineur.direction=="droite"){
+        objContexte.translate(debutCellule_X,debutCellule_Y)
+        objContexte.translate(0, hauteurCellule); 
+        objContexte.scale(1.5, -1.5);
+    }
+    if(objMineur.direction == "gauche"){
+        objContexte.translate(debutCellule_X,debutCellule_Y)
+        objContexte.translate(0, hauteurCellule); 
+        objContexte.scale(1.5, -1.5);
+        objContexte.translate(longeurCellule,0)
+        objContexte.scale(-1,1);
 
-    // Direction Gauche
-    // objContexte.translate(longeurCellule,0)
-    // objContexte.scale(-1,1);
+    }
 
     objContexte.fillStyle = couleurMineurCorps;
     
@@ -387,13 +395,22 @@ const creuserTrou = (strCote) => {
     
     for(cel of tabObjCellules){
         if(posActuelle[1] == cel.colonne && (cel.ligne - 1) == posActuelle[0] && cel.type == "beton"){
-            
             transformerCellule(cel.ligne,cel.colonne+cote,"vide")
         }
     }
 }
 
-
+/* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
+const binSolVide = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    
+    for(cel of tabObjCellules){
+        if(posActuelle[1] == cel.colonne && (cel.ligne) == posActuelle[0] && cel.type == "vide"){
+            objMineur.binDeplacement = true;
+            objMineur.positionY += objMineur.vitesse;
+        }
+    }
+}
 
 const effacer = () => {
     /* Au lieu d'utiliser fonction clearRect, je peins tout le canvas en noir afin de faire le fond */
@@ -405,7 +422,7 @@ const effacer = () => {
 
 const mettreAJour = () => {
     objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-
+    binSolVide();
 }
 
 const animer = () => {
@@ -414,5 +431,4 @@ const animer = () => {
     mettreAJour();
     dessinerNiveau();
     dessinerMineur();
-
 }
