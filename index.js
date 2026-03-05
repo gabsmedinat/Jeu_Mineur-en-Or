@@ -4,7 +4,11 @@
 var objCanvas = null;
 var objContexte = null;
 var objCycleAnimation = null;
-
+var couleurFondEcran = "black";
+var nbrColonnes = 28;
+var nbrLignes = 17;
+var longeurCellules = null;
+var largeurCellules = null;
 
 var objNiveau;
 var tabObjCellules;
@@ -16,23 +20,24 @@ var tabObjCellules;
     * Les lingots d'or seront placés de manière aléatoire
 */
 var niveau = [
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,2,0,0,0,0,1,1,2,0,0,0,1,1,1,1,1,1,1,2,1,1],
-        [0,0,0,0,0,0,0,2,0,0,0,0,1,1,2,0,0,0,0,0,0,0,0,0,0,2,0,0],
-        [0,0,0,0,0,0,0,2,0,0,0,0,1,1,2,0,0,0,0,0,0,0,0,0,0,2,0,0],
-        [1,1,2,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1],
-        [0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],
-        [0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,3,2,0,0,0,0,0,0,0],
-        [0,0,0,0,2,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,2],
-        [0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-        [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]                                
+    //   1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28
+    /*1*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*2*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*3*/  [1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*4*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*5*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,1 ,1 ,2 ,0 ,0 ,0 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ],
+    /*6*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ],
+    /*7*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ],
+    /*8*/  [1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,0 ,0 ,0 ,0 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ],
+    /*9*/  [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*10*/ [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*11*/ [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*12*/ [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*13*/ [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*14*/ [0 ,0 ,0 ,0 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ],
+    /*15*/ [0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ],
+    /*16*/ [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ],
+    /*17*/ [4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ]                                
     ]
 
 var objMineur;
@@ -61,24 +66,24 @@ const ecouter = () =>{
         case "ArrowUp":
         case "w":
             objMineur.binDeplacement = true;
-            objMineur.positionY -= objMineur.vitesse*5;
+            monterEchelles();
             break;
         case "ArrowDown":
         case "s":
             objMineur.binDeplacement = true;
-            objMineur.positionY += objMineur.vitesse*5;
+            descendreEchelles();
             break;
         case "ArrowRight":
         case "d":
             objMineur.binDeplacement = true;
-            objMineur.direction = "droite"
-            objMineur.positionX += objMineur.vitesse*5;
+            objMineur.direction = "droite";
+            deplacementHorizontal();
             break;
         case "ArrowLeft":
         case "a":
             objMineur.binDeplacement = true;
-            objMineur.direction = "gauche"
-            objMineur.positionX -= objMineur.vitesse*5;
+            objMineur.direction = "gauche";
+            deplacementHorizontal();
             break;
         case "x":
             creuserTrou("droite");
@@ -86,24 +91,32 @@ const ecouter = () =>{
         case "z":
             creuserTrou("gauche");
             break;
-        case "o": // Cette touche m'aide juste à connaître la position actuelle du Mineur pour des fins de déboggage
+        case "i": // Touches utilisées pour des fins de déboggage
             console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
             break;
-        case "l":
+        case "k":
             console.log(obtenirPositionCelluleDessous(objMineur.celluleActuelle[0],objMineur.celluleActuelle[1]));
+            break;
+        case "l":
+            console.log(obtenirPositionCelluleACote("droite"));
+            break;
+        case "j":
+            console.log(obtenirPositionCelluleACote("gauche"));
+            break;
+        case "t":
+            let v = obtenirPositionCelluleACote(objMineur.direction);
+            console.log(v);
+            console.log(obtenirTypeCellule(v[1],v[0]))
+            break;
     }
 }
-
-
-
-
 
 const initNiveau = ()=>{
     objNiveau = new Object();
     objNiveau.nom = "Niveau 1";
     objNiveau.tableau = niveau;
-    objNiveau.colonnes = 28;
-    objNiveau.lignes = 17;
+    objNiveau.colonnes = nbrColonnes;
+    objNiveau.lignes = nbrLignes;
     
     tabObjCellules = new Array();
     for(let y=0; y<objNiveau.lignes; y++){
@@ -112,10 +125,11 @@ const initNiveau = ()=>{
             var objCellule = new Object();
             objCellule.ligne = y+1;
             objCellule.colonne = x+1;
-            objCellule.longeur = objCanvas.width/28;
-            objCellule.hauteur = objCanvas.height/17;
+            objCellule.longeur = objCanvas.width/nbrColonnes;
+            objCellule.hauteur = objCanvas.height/nbrLignes;
             objCellule.positionX = x*objCellule.longeur;
             objCellule.positionY = y*objCellule.hauteur;
+            objCellule.positionFinX = objCellule.positionX + objCellule.longeur;
 
             typeCellule = objNiveau.tableau[y][x];
             switch(typeCellule){
@@ -155,6 +169,7 @@ const initMineur = () =>  {
     objMineur = new Object();
     objMineur.positionX = coordonneesInitiales[0];
     objMineur.positionY = coordonneesInitiales[1];
+    
 
     objMineur.vitesse = 1;                                          // TODO: À ajuster une fois en fonction
     objMineur.couleur = ["#FFFFFF","#0AC4E0"];
@@ -164,8 +179,6 @@ const initMineur = () =>  {
     objMineur.binVivant = true;                         // TODO: À utiliser pour la fin du jeu
     objMineur.direction = "droite";                     // TODDO: "droite" sera position par défaut scale(1,1), donc pas de scale. "gauche"=scale(-1,1)
 }
-
-
 
 const dessinerNiveau = () => {
     for(cellule of tabObjCellules){
@@ -275,35 +288,31 @@ const dessinerNiveau = () => {
                 objContexte.restore();
                 break;
         }
-    }
-
-
-   
+    }   
 }
 
 const dessinerMineur = () => {
     let debutCellule_X = objMineur.positionX;
     let debutCellule_Y = objMineur.positionY;
-    let longeurCellule = objCanvas.width/28;
-    let hauteurCellule = objCanvas.height/17;
-    let stepX = longeurCellule / 14;
-    let stepY = hauteurCellule / 10;
+    let longeurCellule = objCanvas.width/nbrColonnes;
+    let hauteurCellule = objCanvas.height/nbrLignes;
+    let stepX = 2*longeurCellule / nbrColonnes;
+    let stepY = 5*hauteurCellule / (3*nbrLignes);
     let couleurMineurCorps = objMineur.couleur[0];
     let couleurMineurChapeau = objMineur.couleur[1]; 
     
     objContexte.save();
-    if(objMineur.direction=="droite"){
+    if(objMineur.direction==="droite"){
         objContexte.translate(debutCellule_X,debutCellule_Y)
         objContexte.translate(0, hauteurCellule); 
         objContexte.scale(1.5, -1.5);
     }
-    if(objMineur.direction == "gauche"){
+    if(objMineur.direction === "gauche"){
         objContexte.translate(debutCellule_X,debutCellule_Y)
         objContexte.translate(0, hauteurCellule); 
         objContexte.scale(1.5, -1.5);
         objContexte.translate(longeurCellule,0)
         objContexte.scale(-1,1);
-
     }
 
     objContexte.fillStyle = couleurMineurCorps;
@@ -332,9 +341,9 @@ const dessinerLingots = () => {
     for(cellule of tabObjCellules){
         let colonne = cellule.colonne;
         let ligne = cellule.ligne;
-        if(cellule.type =="vide"){
+        if(cellule.type ==="vide"){
             for(cel of tabObjCellules){
-                if(colonne == cel.colonne && (cel.ligne - 1) == ligne && cel.type == "beton"){
+                if(colonne === cel.colonne && (cel.ligne - 1) === ligne && cel.type === "beton"){
                     tabCelluleDisponible.push(cellule)
                 }
             }
@@ -348,30 +357,28 @@ const dessinerLingots = () => {
     }
 }
 
-
-
 const obtenirTypeCellule = (intLigne, intColonne) => {
+    let type = "dehors";
     let li = intLigne;
     let col = intColonne;
     for(cellule of tabObjCellules){
-        if(cellule.ligne == li && cellule.colonne == col){
-            return cellule.type;
+        if(cellule.ligne === li && cellule.colonne === col){
+            type =  cellule.type;
         }
     }
+    return type;
 }
 
-/* Cette fonction retourn un tableau avec les coordonnés X et Y */
 const obtenirCoordonneesCellule = (intLigne, intColonne) => {
     let li = intLigne ;
     let col = intColonne ;
     for(cellule of tabObjCellules){
-        if(cellule.ligne == li && cellule.colonne == col){
+        if(cellule.ligne === li && cellule.colonne === col){
             return [cellule.positionX,cellule.positionY];
         }
     }
 }
 
-/* Cette fonction retourne la ligne et la colonne actuelle de l'objet qui applique la méthode */
 const obtenirPositionCellule = (fltPosX, fltPosY) => {
     var colonne = Math.ceil((fltPosX / 20) + 1);
     var ligne = Math.floor((fltPosY / 20) +1);
@@ -384,11 +391,88 @@ const obtenirPositionCelluleDessous = () => {
     return [celDessous[0],celDessous[1]];
 }
 
+const onbtenirPositionCelluleDessus = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let celDessus = [posActuelle[0],posActuelle[1]-1];
+    return [celDessus[0],celDessus[1]];
+}
+
+const obtenirPositionCelluleACote = (strCote) => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let cote = (strCote === "droite")? 1 : -1;
+    let celACote = [posActuelle[0]+cote,posActuelle[1]];
+    return [celACote[0],celACote[1]];    
+}
+
+const monterEchelles = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
+    let posCelluleDessus = onbtenirPositionCelluleDessus(posActuelle[0],posActuelle[1]);  
+    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+      
+    for(cel of tabObjCellules){
+        if(typeCelluleActuelle === "echelle" && posCelluleDessus[0] === cel.colonne && posCelluleDessus[1] === cel.ligne && cel.type != "beton"){
+            objMineur.positionY -= objMineur.vitesse*5;
+        }
+
+        if(typeCelluleActuelle === "vide" && cel.type === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne ){
+            objMineur.positionY -= objMineur.vitesse*5;
+        }
+    }
+}
+
+const descendreEchelles = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
+    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+    
+    for(cel of tabObjCellules){
+        if(typeCelluleActuelle === "vide" && cel.type === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne ){
+            objMineur.positionY += objMineur.vitesse*5;
+        }
+        
+        if(typeCelluleActuelle === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
+            objMineur.positionY += objMineur.vitesse*5;
+        }
+    }
+}
+
+const deplacementHorizontal = () =>  {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let celluleDevant = obtenirPositionCelluleACote(objMineur.direction);
+    let cote = (objMineur.direction === "droite")? 1 : -1;
+
+    for(cel of tabObjCellules){
+        if( celluleDevant[0] === cel.colonne+cote && celluleDevant[1] === cel.ligne){
+            for(cel of tabObjCellules){
+                if(cel.colonne === posActuelle[0] && cel.ligne === posActuelle[1] && cel.type != "beton"){
+                    objMineur.positionX += objMineur.vitesse*5*cote;
+                }
+            }
+        }
+    }
+}
+
+const detectionCollisions = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
+    let cote = (objMineur.direction === "droite")? 1 : -1;
+
+    // Ecouteur de collision
+    if(typeCelluleActuelle==="beton"){
+        objMineur.positionX -= objMineur.vitesse*5*cote;
+    }
+    if(typeCelluleActuelle==="dehors"){
+        objMineur.positionX -= objMineur.vitesse*5*cote;
+
+    }
+}
+
 const transformerCellule = (intLigne, intColonne, strType) => {
-    let li = intLigne ;
-    let col = intColonne ;
+    let li = intLigne;
+    let col = intColonne;
     for(cellule of tabObjCellules){
-        if(cellule.ligne == li && cellule.colonne == col){
+        if(cellule.ligne === li && cellule.colonne === col){
             cellule.type = strType;
             (strType!="vide")?cellule.binDisponible=false:cellule.binDisponible = true;
         }
@@ -399,23 +483,24 @@ const transformerCellule = (intLigne, intColonne, strType) => {
         Si strCote ne vaut pas "droite", je transforme la colonne à gauche. */
 const creuserTrou = (strCote) => {
     let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-    let cote = (strCote=="droite")? 1 : -1;
+    let cote = (strCote==="droite")? 1 : -1;
+    let positionVisee = [posActuelle[0]+cote,posActuelle[1]+1];
     
     for(cel of tabObjCellules){
-        if(posActuelle[0] == cel.colonne && (cel.ligne - 1) == posActuelle[1] && cel.type == "beton"){
-            transformerCellule(cel.ligne,cel.colonne+cote,"vide");
-        }
+        if(positionVisee[0] === cel.colonne && positionVisee[1] === cel.ligne && cel.type === "beton"){
+            transformerCellule(cel.ligne,cel.colonne,"vide");
+        }   
     }
 }
-
 
 /* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
 const chute = () => {
     let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
     let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
     for(cel of tabObjCellules){
-        if(posCelluleDessous[0]==cel.colonne && posCelluleDessous[1]==cel.ligne && cel.type != "beton"){
-            if(cel.type != "echelle" && cel.type != "barre"){
+        if(posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
+            if(cel.type != "echelle" && typeCelluleActuelle != "barre"){
                 objMineur.binDeplacement = true;
                 objMineur.positionY += objMineur.vitesse;
             }
@@ -423,21 +508,10 @@ const chute = () => {
     }
 }
 
-const monterEchelles = () => {
-    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-    
-    for(cel of tabObjCellules){
-        if(posActuelle[0] == cel.colonne && (cel.ligne) == posActuelle[1] && cel.type == "echelle"){
-            objMineur.binDeplacement = true;
-            objMineur.positionY = objMineur.vitesse;
-        }
-    }
-}
-
 const collisionAvecLingot = () => {
     let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
     for(cel of tabObjCellules){
-        if(posActuelle[0] == cel.colonne && posActuelle[1] == (cel.ligne ) && cel.type == "lingots"){
+        if(posActuelle[0] === cel.colonne && posActuelle[1] === (cel.ligne ) && cel.type === "lingots"){
             cel.type = "vide";
         }
     }
@@ -446,7 +520,7 @@ const collisionAvecLingot = () => {
 const effacer = () => {
     /* Au lieu d'utiliser fonction clearRect, je peins tout le canvas en noir afin de faire le fond */
     objContexte.save();
-    objContexte.fillStyle = "black";  
+    objContexte.fillStyle = couleurFondEcran;
     objContexte.fillRect(0,0,objCanvas.width,objCanvas.height);
     objContexte.restore();
 }
@@ -455,8 +529,8 @@ const mettreAJour = () => {
     objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
     chute();
     collisionAvecLingot();
+    detectionCollisions();
 }
-
 
 const animer = () => {
     objCycleAnimation = requestAnimationFrame(animer);
