@@ -4,11 +4,19 @@
 var objCanvas = null;
 var objContexte = null;
 var objCycleAnimation = null;
-var couleurFondEcran = "black";
+var couleurFondEcran = ["black","#181D31","#2e2f15","#62293d","#502344"];
 var nbrColonnes = 28;
 var nbrLignes = 17;
 var longeurCellules = null;
 var largeurCellules = null;
+
+/* SYSTEME DE JEU */
+var nbrVies = null;
+// var temps = null;                        // TODO: Implémentation du chronomètre
+var niveauActuel = 4;
+var tabLingots = null;
+var nbrLingotsDebut = null;
+var nbrEnnemis = null;
 
 var objNiveau;
 var tabObjCellules;
@@ -19,7 +27,8 @@ var tabObjCellules;
     3: brique    
     * Les lingots d'or seront placés de manière aléatoire
 */
-var niveau = [
+var lstNiveaux = [
+    [
     //   1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28
     /*1*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
     /*2*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
@@ -29,8 +38,8 @@ var niveau = [
     /*6*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ],
     /*7*/  [0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ],
     /*8*/  [1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,0 ,0 ,0 ,0 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ],
-    /*9*/  [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
-    /*10*/ [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,1 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*9*/  [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
+    /*10*/ [0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
     /*11*/ [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
     /*12*/ [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
     /*13*/ [0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,3 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ],
@@ -38,10 +47,72 @@ var niveau = [
     /*15*/ [0 ,0 ,0 ,0 ,2 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,2 ],
     /*16*/ [1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ,1 ],
     /*17*/ [4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ]                                
-    ]
+    ],
+    [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,2,0,0,0,2,1,1,2,0,0,0,1,1,1,1,1,1,1,2,1,1],
+        [0,0,0,0,0,0,0,2,0,0,0,2,1,1,2,0,0,0,0,0,0,0,0,0,0,2,0,0],
+        [0,0,0,0,0,0,0,2,0,0,0,2,1,1,2,0,0,0,0,0,0,0,0,0,0,2,0,0],
+        [1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1],
+        [0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],
+        [0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,2,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0],
+        [1,0,0,0,0,0,0,0,0,2,3,3,3,3,2,3,3,3,3,3,2,0,0,0,0,0,0,0],
+        [1,0,1,1,2,1,1,1,1,1,1,0,0,0,2,0,0,0,0,0,1,1,1,1,1,1,1,2],
+        [1,0,0,0,2,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4] 
+    ],
+    [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [1,1,1,2,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,2,1,1,1,1,1],
+        [0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0],
+        [0,0,0,2,0,0,1,1,1,2,1,1,1,1,1,1,2,1,1,1,0,0,2,0,0,0,0,0],
+        [1,1,1,1,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,1,1,1,1,1,1],
+        [0,0,0,0,0,0,0,0,0,2,3,3,3,3,3,3,2,0,0,0,0,0,0,0,0,0,0,0],
+        [0,1,1,1,2,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,2,1,1,1,1,0,0],
+        [0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0],
+        [1,1,0,0,2,0,0,3,3,3,3,3,3,1,2,3,3,3,3,0,0,2,0,0,1,1,1,1],
+        [0,0,0,0,2,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,2,0,0,0,0,0,0],
+        [0,0,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0],
+        [1,1,1,2,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,2,1,1,1,1,1],
+        [0,0,0,2,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+    ],
+    [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,1,2,1,1],
+        [0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0],
+        [0,0,1,1,1,3,3,3,3,3,2,3,3,3,3,3,3,1,1,1,1,1,1,1,1,2,0,0],
+        [0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0],
+        [0,0,2,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,2,0,0],
+        [1,1,1,1,1,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2,1,1,1,1,1],
+        [0,0,0,0,0,2,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,2,0,0,0,0,0],
+        [0,0,0,0,0,2,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0],
+        [0,1,1,1,1,1,1,1,2,1,1,0,0,1,2,0,0,1,1,2,1,1,1,1,1,1,0,0],
+        [0,0,0,0,0,0,0,0,2,0,0,0,0,1,2,0,0,0,0,2,0,0,0,0,0,0,0,0],
+        [1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1],
+        [0,0,2,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,2,0,0,0,0,0,2,0,0],
+        [0,0,2,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0,2,0,1,1,2,0,2,0,0],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+]
+]
 
-var objMineur;
-var tabObjGardes;
+    /* PERSONNAGES */
+    var objMineur;
+    var tabObjGardes;
+
+
+
 
 
 // Début de la logique
@@ -54,11 +125,27 @@ const init = ()=>{
 
     window.addEventListener('keydown',ecouter)
 
+    nbrVies = 3;
+    tabLingots = initLingots();    
+    nbrEnnemis = 3 + niveauActuel;
+
+
     initNiveau();
     initMineur();
     dessinerLingots();
     dessinerNiveau(); 
     animer();
+}
+
+const initLingots = () => {
+    var tabLingots = new Array();
+    for(let i = 0; i<(0+niveauActuel); i++){
+        var objLingot = new Object();
+        objLingot.points = 250;
+        objLingot.binDejaPrit = false;
+        tabLingots.push(objLingot);
+    }
+    return tabLingots;
 }
 
 const ecouter = () =>{
@@ -108,15 +195,20 @@ const ecouter = () =>{
             console.log(v);
             console.log(obtenirTypeCellule(v[1],v[0]))
             break;
+        case "h":
+            niveauActuel ++;
+            init();
+            break;
     }
 }
 
 const initNiveau = ()=>{
     objNiveau = new Object();
     objNiveau.nom = "Niveau 1";
-    objNiveau.tableau = niveau;
+    objNiveau.tableau = lstNiveaux[niveauActuel-1];
     objNiveau.colonnes = nbrColonnes;
     objNiveau.lignes = nbrLignes;
+    objNiveau.binReussi = false;
     
     tabObjCellules = new Array();
     for(let y=0; y<objNiveau.lignes; y++){
@@ -350,10 +442,38 @@ const dessinerLingots = () => {
         }
     }
     
-    for(let i = 0; i<7; i++){
+    for(let i = 0; i<tabLingots.length; i++){
         let indexCelluleChoisie = Math.floor(Math.random()*tabCelluleDisponible.length);
         let celluleChoisie = tabCelluleDisponible[indexCelluleChoisie];
         transformerCellule(celluleChoisie.ligne, celluleChoisie.colonne, "lingots")
+    }
+}
+
+const collisionAvecLingot = () => {
+    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+    for(cel of tabObjCellules){
+        if(posActuelle[0] === cel.colonne && posActuelle[1] === (cel.ligne ) && cel.type === "lingots"){
+            cel.type = "vide";
+            tabLingots.pop();
+        }
+    }
+    // if(tabLingots.length==0){
+    //     alert("Vous avez gagné ce niveau !")
+    // }
+}
+
+const binLingotsAcquis = () => {
+    if(tabLingots.length==0){
+        objNiveau.binReussi = true;
+        for(let i = 1; i<= 15; i++){
+            transformerCellule(i,13,"echelle");
+        }
+        if(objMineur.celluleActuelle[0]==13){
+            objMineur.positionY --;
+            if(objMineur.celluleActuelle[1]==0){
+                arreterAnimation();
+            }
+        }
     }
 }
 
@@ -508,19 +628,13 @@ const chute = () => {
     }
 }
 
-const collisionAvecLingot = () => {
-    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-    for(cel of tabObjCellules){
-        if(posActuelle[0] === cel.colonne && posActuelle[1] === (cel.ligne ) && cel.type === "lingots"){
-            cel.type = "vide";
-        }
-    }
-}
+
+
 
 const effacer = () => {
     /* Au lieu d'utiliser fonction clearRect, je peins tout le canvas en noir afin de faire le fond */
     objContexte.save();
-    objContexte.fillStyle = couleurFondEcran;
+    objContexte.fillStyle = couleurFondEcran[niveauActuel-1];
     objContexte.fillRect(0,0,objCanvas.width,objCanvas.height);
     objContexte.restore();
 }
@@ -532,10 +646,27 @@ const mettreAJour = () => {
     detectionCollisions();
 }
 
+
+
 const animer = () => {
     objCycleAnimation = requestAnimationFrame(animer);
     effacer();
     mettreAJour();
+    binLingotsAcquis();
     dessinerNiveau();
     dessinerMineur();
+}
+
+const arreterAnimation = () => {
+    if(objCycleAnimation != null){
+        cancelAnimationFrame(objCycleAnimation);
+        objCycleAnimation = null;
+        reDemarrer();
+    }
+}
+
+const reDemarrer = () => {
+    if(objNiveau.binReussi){
+        alert(`Vous avez reussi le niveau ${niveauActuel}. Appuyez la touche "h" pour le niveau suivant ...`)
+    }
 }
