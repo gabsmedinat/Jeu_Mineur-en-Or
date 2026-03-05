@@ -13,7 +13,7 @@ var largeurCellules = null;
 /* SYSTEME DE JEU */
 var nbrVies = null;
 // var temps = null;                        // TODO: Implémentation du chronomètre
-var niveauActuel = 7;
+var niveauActuel = 1;
 var tabLingots = null;
 var nbrLingotsDebut = null;
 var nbrEnnemis = null;
