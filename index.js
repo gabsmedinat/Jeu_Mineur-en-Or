@@ -11,7 +11,7 @@ var longeurCellules = null;
 var largeurCellules = null;
 
 /* SYSTEME DE JEU */
-var nbrVies = null;
+var nbrVies = 3;
 // var temps = null;                        // TODO: Implémentation du chronomètre
 var niveauActuel = 1;
 var tabLingots = null;
@@ -163,17 +163,11 @@ var lstNiveaux = [
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
     ]
-
-
 ]
 
     /* PERSONNAGES */
     var objMineur;
     var tabObjGardes;
-
-
-
-
 
 // Début de la logique
 
@@ -182,19 +176,24 @@ const init = ()=>{
     // objCanvas.width = window.innerWidth;
     // objCanvas.height = window.innerHeight;
     objContexte = objCanvas.getContext("2d");
+    objContexte.fillRect(0,0,objCanvas.width,objCanvas.height)
 
     window.addEventListener('keydown',ecouter)
 
-    nbrVies = 3;
     tabLingots = initLingots();    
     nbrEnnemis = 3 + niveauActuel;
 
-
     initNiveau();
     initMineur();
+    initGardes();
     dessinerLingots();
     dessinerNiveau(); 
-    animer();
+    if(nbrVies>0){
+        animer();
+    }else{
+        jeuTermine();
+    }
+    
 }
 
 const initLingots = () => {
@@ -210,15 +209,16 @@ const initLingots = () => {
 
 const ecouter = () =>{
     switch(event.key){
+
         case "ArrowUp":
         case "w":
             objMineur.binDeplacement = true;
-            monterEchelles();
+            monterEchelles(objMineur);
             break;
         case "ArrowDown":
         case "s":
             objMineur.binDeplacement = true;
-            descendreEchelles();
+            descendreEchelles(objMineur);
             break;
         case "ArrowRight":
         case "d":
@@ -315,16 +315,55 @@ const initNiveau = ()=>{
     }
 }
 
+const initGardes = () => {
+    tabObjGardes = new Array();
+    let tabCelluleDisponible = new Array();
+    for(cellule of tabObjCellules){
+        let colonne = cellule.colonne;
+        let ligne = cellule.ligne;
+        if(cellule.type ==="vide"){
+            for(cel of tabObjCellules){
+                if(colonne === cel.colonne && (cel.ligne - 1) === ligne && cel.type === "beton"){
+                    tabCelluleDisponible.push(cellule)
+                }
+            }
+        }
+    }
+    
+    for(let i = 0; i<nbrEnnemis; i++){
+        let indexCelluleChoisie = Math.floor(Math.random()*tabCelluleDisponible.length);
+        let celluleChoisie = tabCelluleDisponible[indexCelluleChoisie];
+        
+        let coordonneesInitiales = obtenirCoordonneesCellule(celluleChoisie.ligne, celluleChoisie.colonne);    // Coordonnées de cellule (13,10)
+    
+        objGarde = new Object();
+        objGarde.nom = `Garde_${i}`;
+        objGarde.positionX = coordonneesInitiales[0];
+        objGarde.positionY = coordonneesInitiales[1];
+        
+    
+        objGarde.vitesse = 1;                                          // TODO: À ajuster une fois en fonction
+        objGarde.couleur = ["#D92C54","#ADEED9","#0AC4E0"];
+        objGarde.binChute = false;
+        objGarde.binDeplacement = false;                   // TODO: À s'en servir pour l'animation
+        objGarde.binObjetDevant = false;                   // TODO: À utiliser pour collision
+        objGarde.binVivant = true;                         // TODO: À utiliser pour la fin du jeu
+        objGarde.direction = "droite";                     // TODDO: "droite" sera position par défaut scale(1,1), donc pas de scale. "gauche"=scale(-1,1)
+        tabObjGardes.push(objGarde);
+    }
+}
+
 const initMineur = () =>  {
     let coordonneesInitiales = obtenirCoordonneesCellule(10,13);    // Coordonnées de cellule (13,10)
 
     objMineur = new Object();
+    objMineur.nom = "Mineur";
     objMineur.positionX = coordonneesInitiales[0];
     objMineur.positionY = coordonneesInitiales[1];
     
 
     objMineur.vitesse = 1;                                          // TODO: À ajuster une fois en fonction
-    objMineur.couleur = ["#FFFFFF","#0AC4E0"];
+    objMineur.couleur = ["#FFFFFF","#FFFFFF","#0AC4E0"];    // Pnatalon, Corps, chapeu
     objMineur.binChute = false;
     objMineur.binDeplacement = false;                   // TODO: À s'en servir pour l'animation
     objMineur.binObjetDevant = false;                   // TODO: À utiliser pour collision
@@ -443,23 +482,24 @@ const dessinerNiveau = () => {
     }   
 }
 
-const dessinerMineur = () => {
-    let debutCellule_X = objMineur.positionX;
-    let debutCellule_Y = objMineur.positionY;
+const dessinerPersonnage = (objPersonnage) => {
+    let debutCellule_X = objPersonnage.positionX;
+    let debutCellule_Y = objPersonnage.positionY;
     let longeurCellule = objCanvas.width/nbrColonnes;
     let hauteurCellule = objCanvas.height/nbrLignes;
     let stepX = 2*longeurCellule / nbrColonnes;
     let stepY = 5*hauteurCellule / (3*nbrLignes);
-    let couleurMineurCorps = objMineur.couleur[0];
-    let couleurMineurChapeau = objMineur.couleur[1]; 
+    let couleurMineurPantalon = objPersonnage.couleur[0];
+    let couleurMineurCorps = objPersonnage.couleur[1];
+    let couleurMineurChapeau = objPersonnage.couleur[2]; 
     
     objContexte.save();
-    if(objMineur.direction==="droite"){
+    if(objPersonnage.direction==="droite"){
         objContexte.translate(debutCellule_X,debutCellule_Y)
         objContexte.translate(0, hauteurCellule); 
         objContexte.scale(1.5, -1.5);
     }
-    if(objMineur.direction === "gauche"){
+    if(objPersonnage.direction === "gauche"){
         objContexte.translate(debutCellule_X,debutCellule_Y)
         objContexte.translate(0, hauteurCellule); 
         objContexte.scale(1.5, -1.5);
@@ -467,7 +507,7 @@ const dessinerMineur = () => {
         objContexte.scale(-1,1);
     }
 
-    objContexte.fillStyle = couleurMineurCorps;
+    objContexte.fillStyle = couleurMineurPantalon;
     
     objContexte.fillRect(7*stepX,0,stepX,stepY);
     objContexte.fillRect(7*stepX,stepY,stepX,stepY);
@@ -475,6 +515,9 @@ const dessinerMineur = () => {
     objContexte.fillRect(6*stepX,2*stepY,stepX,stepY/2);
     objContexte.fillRect(18*stepX/4,6*stepY/4,2*stepX,stepY/2);
     objContexte.fillRect(6*stepX,2*stepY,stepX,2*stepY);
+        
+    objContexte.fillStyle = couleurMineurCorps;
+
     objContexte.fillRect(6*stepX+stepX/2,4*stepY,3*stepX/2,stepY/2);
     objContexte.fillRect(8*stepX,3*stepY+stepY/2,stepX,stepY/2);
     objContexte.fillRect(6*stepX,4*stepY+stepY/2,3*stepX/2,stepY/2);
@@ -486,6 +529,12 @@ const dessinerMineur = () => {
     objContexte.fillRect(7*stepX,6*stepY+stepY/3,stepX/2,stepY/2);
 
     objContexte.restore();
+}
+
+const dessinerGardes = () => {
+    for(garde of tabObjGardes){
+        dessinerPersonnage(garde);
+    }
 }
 
 const dessinerLingots = () => {
@@ -523,7 +572,7 @@ const binLingotsAcquis = () => {
     if(tabLingots.length==0){
         objNiveau.binReussi = true;
         for(let i = 1; i<= 15; i++){
-            transformerCellule(i,13+niveauActuel,"echelle");
+            transformerCellule(i,13,"echelle");
         }
         if(objMineur.celluleActuelle[0]==13){
             objMineur.positionY --;
@@ -562,8 +611,8 @@ const obtenirPositionCellule = (fltPosX, fltPosY) => {
     return [colonne,ligne];
 }
 
-const obtenirPositionCelluleDessous = () => {
-    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+const obtenirPositionCelluleDessous = (objPersonnage) => {
+    let posActuelle = obtenirPositionCellule(objPersonnage.positionX, objPersonnage.positionY);
     let celDessous = [posActuelle[0],posActuelle[1]+1];
     return [celDessous[0],celDessous[1]];
 }
@@ -581,35 +630,35 @@ const obtenirPositionCelluleACote = (strCote) => {
     return [celACote[0],celACote[1]];    
 }
 
-const monterEchelles = () => {
-    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+const monterEchelles = (objPersonnage) => {
+    let posActuelle = obtenirPositionCellule(objPersonnage.positionX, objPersonnage.positionY);
     let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
     let posCelluleDessus = onbtenirPositionCelluleDessus(posActuelle[0],posActuelle[1]);  
-    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+    let posCelluleDessous = obtenirPositionCelluleDessous(objPersonnage);
       
     for(cel of tabObjCellules){
         if(typeCelluleActuelle === "echelle" && posCelluleDessus[0] === cel.colonne && posCelluleDessus[1] === cel.ligne && cel.type != "beton"){
-            objMineur.positionY -= objMineur.vitesse*5;
+            objPersonnage.positionY -= objPersonnage.vitesse;
         }
 
         if(typeCelluleActuelle === "vide" && cel.type === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne ){
-            objMineur.positionY -= objMineur.vitesse*5;
+            objPersonnage.positionY -= objPersonnage.vitesse;
         }
     }
 }
 
-const descendreEchelles = () => {
-    let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
+const descendreEchelles = (objPersonnage) => {
+    let posActuelle = obtenirPositionCellule(objPersonnage.positionX, objPersonnage.positionY);
     let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
-    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+    let posCelluleDessous = obtenirPositionCelluleDessous(objPersonnage);
     
     for(cel of tabObjCellules){
         if(typeCelluleActuelle === "vide" && cel.type === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne ){
-            objMineur.positionY += objMineur.vitesse*5;
+            objPersonnage.positionY += objPersonnage.vitesse*5;
         }
         
         if(typeCelluleActuelle === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
-            objMineur.positionY += objMineur.vitesse*5;
+            objPersonnage.positionY += objPersonnage.vitesse*5;
         }
     }
 }
@@ -670,11 +719,10 @@ const creuserTrou = (strCote) => {
     }
 }
 
-/* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
 const chute = () => {
     let posActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
     let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
-    let posCelluleDessous = obtenirPositionCelluleDessous(posActuelle[0],posActuelle[1]);
+    let posCelluleDessous = obtenirPositionCelluleDessous(objMineur);
     for(cel of tabObjCellules){
         if(posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
             if(cel.type != "echelle" && typeCelluleActuelle != "barre"){
@@ -685,8 +733,52 @@ const chute = () => {
     }
 }
 
+/* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
+const chuteGarde = (objGarde) => {
+    let posActuelle = obtenirPositionCellule(objGarde.positionX, objGarde.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
+    let posCelluleDessous = obtenirPositionCelluleDessous(objGarde);
+    for(cel of tabObjCellules){
+        if(posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
+            if(cel.type != "echelle" && typeCelluleActuelle != "barre"){
+                objGarde.binDeplacement = true;
+                objGarde.positionY += objGarde.vitesse;
+            }
+        }
+    }
+}
 
+const deplacementHorizontalGarde = (objGarde) =>  {
+    let posActuelle = obtenirPositionCellule(objGarde.positionX, objGarde.positionY);
+    let celluleDevant = obtenirPositionCelluleACote(objGarde.direction);
+    let cote = (objGarde.direction === "droite")? 1 : -1;
 
+    for(cel of tabObjCellules){
+        if( celluleDevant[0] === cel.colonne+cote && celluleDevant[1] === cel.ligne){
+            for(cel of tabObjCellules){
+                if(cel.colonne === posActuelle[0] && cel.ligne === posActuelle[1] && cel.type != "beton"){
+                    objGarde.positionX += objGarde.vitesse*cote;
+                }
+                
+            }
+        }
+    }
+}
+
+const detectionCollisionsGarde = (objGarde) => {
+    let posActuelle = obtenirPositionCellule(objGarde.positionX, objGarde.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
+    let cote = (objGarde.direction === "droite")? 1 : -1;
+
+    // Ecouteur de collision
+    if(typeCelluleActuelle==="beton"){
+        objGarde.positionX -= objGarde.vitesse*5*cote;
+    }
+    if(typeCelluleActuelle==="dehors"){
+        objGarde.positionX -= objGarde.vitesse*5*cote;
+        (objGarde.direction=="droite")?objGarde.direction="gauche":objGarde.direction="droite";
+    }
+}
 
 const effacer = () => {
     /* Au lieu d'utiliser fonction clearRect, je peins tout le canvas en noir afin de faire le fond */
@@ -699,11 +791,11 @@ const effacer = () => {
 const mettreAJour = () => {
     objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
     chute();
+    mourir();
+    comportementGardes();
     collisionAvecLingot();
     detectionCollisions();
 }
-
-
 
 const animer = () => {
     objCycleAnimation = requestAnimationFrame(animer);
@@ -711,7 +803,37 @@ const animer = () => {
     mettreAJour();
     binLingotsAcquis();
     dessinerNiveau();
-    dessinerMineur();
+    dessinerPersonnage(objMineur);
+    dessinerGardes();
+}
+
+const mourir = () => {
+    let posMineur = obtenirPositionCellule(objMineur.positionX,objMineur.positionY);
+    for(garde of tabObjGardes){
+        let posGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
+        if(posMineur[0]==posGarde[0] && posMineur[1]==posGarde[1] ){
+            console.log(`Mineur ${posMineur} \nGarde ${posGarde}`)
+            objMineur.binDejaPrit = true;
+            arreterAnimation();
+        }
+    }
+}
+
+
+
+
+const comportementGardes = () => {
+    
+    for(garde of tabObjGardes){
+        let posActuelle = obtenirPositionCellule(garde.positionX,garde.positionY);
+        chuteGarde(garde);
+        if(obtenirTypeCellule(posActuelle[1],posActuelle[0])==="echelle"){
+            // monterEchelles(garde);
+        }
+        deplacementHorizontalGarde(garde);
+        detectionCollisionsGarde(garde);
+        
+    }
 }
 
 const arreterAnimation = () => {
@@ -726,4 +848,16 @@ const reDemarrer = () => {
     if(objNiveau.binReussi){
         alert(`Vous avez reussi le niveau ${niveauActuel}. Appuyez la touche "h" pour le niveau suivant ...`)
     }
+    if(objMineur.binDejaPrit){
+        nbrVies--;
+        alert("Le Mineur est mort");
+        init();
+    }
+}
+
+const jeuTermine = () => {
+    alert("Le jeu s'est terminé ! Vous recommencerez à partir du Niveau 1");
+    nbrVies=3;
+    niveauActuel=1;
+    init();
 }
