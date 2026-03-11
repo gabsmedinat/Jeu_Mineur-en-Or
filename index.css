@@ -3,6 +3,25 @@ body {
     overflow: hidden;
 }
 
-.conteneurJeu {
-    
+@keyframes screen-glitch {
+  0% { transform: translate(0); filter: hue-rotate(0deg); }
+  20% { transform: translate(-4px, 4px); filter: hue-rotate(90deg); }
+  40% { transform: translate(-4px, -4px); filter: hue-rotate(-90deg); }
+  60% { transform: translate(4px, 4px); filter: invert(20%); }
+  80% { transform: translate(4px, -4px); filter: invert(0%); }
+  100% { transform: translate(0); filter: hue-rotate(0deg); }
+}
+
+.menu {
+    height: 340;
+    width: 520;
+}
+
+.titre {
+    color: rgb(160, 122, 89);
+}
+
+.animate-glitch {
+  
+  animation: screen-glitch 0.15s cubic-bezier(.25, .46, .45, .94) infinite;
 }

@@ -1,8 +1,16 @@
 
 
+//Variables globales du Menu
+var objCanvasMenu = null;
+var objContexteMenu = null;
+var posTitreCanvas = null;
+var objBoutonMenu = null;
+var strCouleurTitre = "black";
+
 // Variables globales du Jeu
 var objCanvas = null;
 var objContexte = null;
+
 var objCycleAnimation = null;
 var couleurFondEcran = ["black","#181D31","#2e2f15","#62293d","#502344","#A72703","#44444E"];
 var nbrColonnes = 28;
@@ -12,7 +20,6 @@ var largeurCellules = null;
 
 /* SYSTEME DE JEU */
 var nbrVies = 3;
-// var temps = null;                        // TODO: Implémentation du chronomètre
 var niveauActuel = 1;
 var tabLingots = null;
 var nbrLingotsDebut = null;
@@ -169,10 +176,20 @@ var lstNiveaux = [
     var objMineur;
     var tabObjGardes;
 
+    var objMusique;
+
 // Début de la logique
 
 const init = ()=>{
+    objCanvasMenu = document.getElementById("canvasMenu");
+    objCanvasMenu.hidden = false;
+    objContexteMenu = objCanvasMenu.getContext("2d");
+    posTitreCanvas = [objCanvasMenu.width/2, objCanvasMenu.height/4];
+    objBoutonMenu = new Object();                   // Cet objet est associé avec le dessin du bouton
+    objBoutonMenu.binAnimation = false;
+
     objCanvas = document.getElementById("canvasJeu");
+    objCanvas.hidden = true;
     // objCanvas.width = window.innerWidth;
     // objCanvas.height = window.innerHeight;
     objContexte = objCanvas.getContext("2d");
@@ -190,12 +207,20 @@ const init = ()=>{
     initGardes();
     dessinerLingots();
     dessinerNiveau(); 
-    if(nbrVies>0){
-        animer();
-    }else{
-        jeuTermine();
+    dessinerPersonnage(objMineur);
+    dessinerGardes();
+    initSons();
+
+    initBouton();           // Initialisé avant pour que ses propriétés soient chargées
+    imageDebut();           // Menu de début du Jeu
+    animerMenu();
+    if(objNiveau.binDemarrage){
+        if(nbrVies>0 ){
+            animer();
+        }else{
+            jeuTermine();
+        }
     }
-    
 }
 
 const initLingots = () => {
@@ -210,70 +235,182 @@ const initLingots = () => {
 }
 
 const ecouter = () =>{
-    switch(event.key){
+    if(!objCanvas.hidden){
 
-        case "ArrowUp":
-        case "w":
-            objMineur.binDeplacement = true;
-            monterEchelles(objMineur);
-            break;
-        case "ArrowDown":
-        case "s":
-            objMineur.binDeplacement = true;
-            descendreEchelles(objMineur);
-            break;
-        case "ArrowRight":
-        case "d":
-            objMineur.binDeplacement = true;
-            objMineur.direction = "droite";
-            deplacementHorizontal(objMineur);
-            break;
-        case "ArrowLeft":
-        case "a":
-            objMineur.binDeplacement = true;
-            objMineur.direction = "gauche";
-            deplacementHorizontal(objMineur);
-            break;
-        case "x":
-            creuserTrou("droite");
-            break;
-        case "z":
-            creuserTrou("gauche");
-            break;
-        case "i": // Touches utilisées pour des fins de déboggage
-            console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
-            break;
-        case " ":
-
-            console.log(`Le type de cellule où se trouve le Mineur est ${obtenirTypeCellule(objMineur.celluleActuelle[1],objMineur.celluleActuelle[0])}`);
-            break;
-        case "k":
-            console.log(obtenirPositionCelluleDessous(objMineur.celluleActuelle[0],objMineur.celluleActuelle[1]));
-            break;
-        case "l":
-            console.log(obtenirPositionCelluleACote("droite"));
-            break;
-        case "j":
-            console.log(obtenirPositionCelluleACote("gauche"));
-            break;
-        case "t":
-            let v = obtenirPositionCelluleACote(objMineur.direction);
-            console.log(v);
-            console.log(obtenirTypeCellule(v[1],v[0]))
-            break;
-        case "h":
-            niveauActuel ++;
-            init();
-            break;
+        switch(event.key){
+            case "p":
+                objNiveau.binDemarrage = true;
+                animer();
+                break;
+            case "ArrowUp":
+            case "w":
+                objMineur.binDeplacement = true;
+                monterEchelles(objMineur);
+                break;
+            case "ArrowDown":
+            case "s":
+                objMineur.binDeplacement = true;
+                descendreEchelles(objMineur);
+                break;
+            case "ArrowRight":
+            case "d":
+                objMineur.binDeplacement = true;
+                objMineur.direction = "droite";
+                deplacementHorizontal(objMineur);
+                break;
+            case "ArrowLeft":
+            case "a":
+                objMineur.binDeplacement = true;
+                objMineur.direction = "gauche";
+                deplacementHorizontal(objMineur);
+                break;
+            case "x":
+                creuserTrou("droite");
+                break;
+            case "z":
+                creuserTrou("gauche");
+                break;
+            case "i": // Touches utilisées pour des fins de déboggage
+                console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
+                break;
+            case " ":
+                console.log(`Le type de cellule où se trouve le Mineur est ${obtenirTypeCellule(objMineur.celluleActuelle[1],objMineur.celluleActuelle[0])}`);
+                break;
+            case "k":
+                console.log(obtenirPositionCelluleDessous(objMineur.celluleActuelle[0],objMineur.celluleActuelle[1]));
+                break;
+            case "l":
+                console.log(obtenirPositionCelluleACote("droite"));
+                break;
+            case "j":
+                console.log(obtenirPositionCelluleACote("gauche"));
+                break;
+            case "t":
+                let v = obtenirPositionCelluleACote(objMineur.direction);
+                console.log(v);
+                console.log(obtenirTypeCellule(v[1],v[0]))
+                break;
+            case "h":
+                niveauActuel ++;
+                init();
+                break;
+        }
     }
+}
+
+const animerMenu = ()=> {
+    effacerImageDebut();
+    miseAJourParamsMenu();
+    imageDebut();
+    objCycleAnimation = requestAnimationFrame(animerMenu);
+}
+
+const animerBouton = () => {
+    if(!objBoutonMenu.binClique){
+        objMusique.intro.play();
+    }
+    const rect = objCanvasMenu.getBoundingClientRect();
+    objBoutonMenu.souris_x = event.clientX - rect.left;
+    objBoutonMenu.souris_y = event.clientY - rect.top;
+    console.log(`${objBoutonMenu.souris_x},${objBoutonMenu.souris_y}`)
+    if(objBoutonMenu.debutX<objBoutonMenu.souris_x && objBoutonMenu.souris_x<objBoutonMenu.finX & objBoutonMenu.debutY<objBoutonMenu.souris_y && objBoutonMenu.souris_y<objBoutonMenu.finY ){
+        console.log("Je suis dedans")
+        objBoutonMenu.intensiteTitre = 40;
+        objBoutonMenu.binAnimation = true;
+        
+    }else{
+        objBoutonMenu.binAnimation = false;
+        objBoutonMenu.intensiteTitre = 10;
+        objBoutonMenu.debutX = 2*objCanvasMenu.width/5;
+        objBoutonMenu.finX = objBoutonMenu.debutX + objCanvasMenu.width/5;
+        objBoutonMenu.debutY = 2*objCanvasMenu.height/3;
+        objBoutonMenu.finY = objBoutonMenu.debutY + objCanvasMenu.height/8;
+    }
+}
+
+const activerJeu = () => {
+    const rect = objCanvasMenu.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if(objBoutonMenu.debutX<objBoutonMenu.souris_x && objBoutonMenu.souris_x<objBoutonMenu.finX & objBoutonMenu.debutY<objBoutonMenu.souris_y && objBoutonMenu.souris_y<objBoutonMenu.finY ){
+        console.log("Je click dedans")
+        objMusique.intro.pause();
+        objMusique.intro.currentTime = 0;
+        objBoutonMenu.binClique = true;
+        objCanvasMenu.hidden = true;
+        objCanvas.hidden = false;
+    }
+}
+
+const miseAJourParamsMenu = () => {
+    posTitreCanvas = [objCanvasMenu.width/2+10*Math.random(),objCanvasMenu.height/3+objBoutonMenu.intensiteTitre*Math.random()]
+    if(objBoutonMenu.binAnimation){
+        objBoutonMenu.posText = [objCanvasMenu.width/2, 8*objCanvasMenu.height/11+5*Math.random()];
+        objBoutonMenu.couleurTexte = "#452829"
+        strCouleurTitre = "#452829";
+        objBoutonMenu.couleurFond = "#D2DCB6";
+    }else{
+        objBoutonMenu.couleurTexte = "white"
+        strCouleurTitre = "black";
+        objBoutonMenu.couleurFond = "#0D4715";
+    }
+}
+
+const initBouton = () => {
+    objBoutonMenu.couleurFond = "#0D4715";
+    objBoutonMenu.couleurTexte = "#EBE1D1";
+    objBoutonMenu.intensiteTitre = 2;
+    objBoutonMenu.strTexte = "JOUER";
+    objBoutonMenu.font = "15pt Georgia";
+    objBoutonMenu.align = "center";
+    objBoutonMenu.baseLine = "middle";
+    // Propriétés du "boundingBox"
+    objBoutonMenu.debutX = 2*objCanvasMenu.width/5;
+    objBoutonMenu.finX = objBoutonMenu.debutX + objCanvasMenu.width/5;
+    objBoutonMenu.debutY = 2*objCanvasMenu.height/3;
+    objBoutonMenu.finY = objBoutonMenu.debutY + objCanvasMenu.height/8;
+    objBoutonMenu.souris_x = null;
+    objBoutonMenu.souris_y = null;
+    objBoutonMenu.binClique = false;
+    objBoutonMenu.posText = [objCanvasMenu.width/2, 8*objCanvasMenu.height/11]
+}
+
+const imageDebut = () => {
+    objContexteMenu.fillStyle = "#41644A";
+    objContexteMenu.fillRect(0,0,objCanvasMenu.width,objCanvasMenu.height);
+    let tailleTexte = objCanvasMenu.width/11;
+    
+    objContexteMenu.fillStyle = strCouleurTitre;
+    let strTitre = "MINEUR EN OR";
+    objContexteMenu.font = `${tailleTexte}pt Georgia`;
+    objContexteMenu.textAlign = "center";
+    objContexteMenu.textBaseline = "middle";
+    objContexteMenu.fillText(strTitre,posTitreCanvas[0],posTitreCanvas[1]);
+
+    // Bouton
+    objContexteMenu.fillStyle = objBoutonMenu.couleurFond;
+    
+    objContexteMenu.fillRect(objBoutonMenu.debutX,objBoutonMenu.debutY,objCanvasMenu.width/5,objCanvasMenu.height/8);
+    
+    objContexteMenu.fillStyle = objBoutonMenu.couleurTexte;
+    let strDemarrer = objBoutonMenu.strTexte;
+    objContexteMenu.font = objBoutonMenu.font;
+    objContexteMenu.textAlign = objBoutonMenu.align;
+    objContexteMenu.textBaseline = objBoutonMenu.baseLine;
+    objContexteMenu.fillText(strDemarrer,objBoutonMenu.posText[0], objBoutonMenu.posText[1]);
+}
+
+const effacerImageDebut = () => {
+    objContexteMenu.clearRect(0,0,objCanvasMenu.width, objCanvasMenu.height);
 }
 
 const initNiveau = ()=>{
     objNiveau = new Object();
-    objNiveau.nom = "Niveau 1";
+    objNiveau.nom = `Niveau ${niveauActuel}`;
     objNiveau.tableau = lstNiveaux[niveauActuel-1];
     objNiveau.colonnes = nbrColonnes;
     objNiveau.lignes = nbrLignes;
+    objNiveau.binDemarrage = false;
     objNiveau.binReussi = false;
     
     tabObjCellules = new Array();
@@ -320,6 +457,20 @@ const initNiveau = ()=>{
             tabObjCellules.push(objCellule);
         }
     }
+}
+
+const initSons = () => {
+    objMusique = new Object();
+
+    let objSon = document.createElement('audio');
+    objSon.setAttribute('src','/Assets/lightsaberStrongHum.wav');
+    objSon.load();
+    objMusique.intro = objSon;
+
+    objSon = document.createElement('audio');
+    objSon.setAttribute('src','/Assets/Musique_fond.mp3');
+    objSon.load();
+    objMusique.musique_fond = objSon;
 }
 
 const initGardes = () => {
@@ -370,7 +521,7 @@ const initMineur = () =>  {
     objMineur.positionY = coordonneesInitiales[1];
     
 
-    objMineur.vitesse = 2;                                          // TODO: À ajuster une fois en fonction
+    objMineur.vitesse = 3;                                          // TODO: À ajuster une fois en fonction
     objMineur.couleur = ["#FFFFFF","#FFFFFF","#0AC4E0"];    // Pnatalon, Corps, chapeu
     objMineur.binChute = false;
     objMineur.binDeplacement = false;                   // TODO: À s'en servir pour l'animation
@@ -729,7 +880,13 @@ const creuserTrou = (strCote) => {
     
     for(cel of tabObjCellules){
         if(positionVisee[0] === cel.colonne && positionVisee[1] === cel.ligne && cel.type === "beton"){
-            transformerCellule(cel.ligne,cel.colonne,"vide");
+            let ligne = cel.ligne;
+            let colonne = cel.colonne;
+            transformerCellule(ligne, colonne,"vide");
+            setTimeout(()=>{
+                transformerCellule(ligne,colonne, "beton")
+                console.log(cel.type)
+            },8000);
         }   
     }
 }
@@ -741,7 +898,6 @@ const chute = () => {
     for(cel of tabObjCellules){
         if(posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
             if(cel.type != "echelle" && typeCelluleActuelle != "barre"){
-                // objMineur.binDeplacement = true;
                 objMineur.positionY += objMineur.vitesse;
             }
         }
@@ -817,24 +973,13 @@ const animer = () => {
 }
 
 const mourir = () => {
-    // let posMineur = obtenirPositionCellule(objMineur.positionX,objMineur.positionY);
-    // for(garde of tabObjGardes){
-    //     let posGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
-    //     if(posMineur[0]==posGarde[0] && posMineur[1]==posGarde[1] ){
-    //         console.log(`Mineur ${posMineur} \nGarde ${posGarde}`)
-    //         objMineur.binDejaPrit = true;
-    //         arreterAnimation();
-    //     }
-    // }
-}
-
-const rebondir = (objPersonnage) => {
-    let posGardeActuel = obtenirPositionCellule(objPersonnage.positionX,objPersonnage.positionY);
+    let posMineur = obtenirPositionCellule(objMineur.positionX,objMineur.positionY);
     for(garde of tabObjGardes){
-        let posAutreGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
-        if(posGardeActuel[0]==posAutreGarde[0] && posGardeActuel[1]==posAutreGarde[1] && objPersonnage.nom !== garde.nom){
-            console.log("Inversement en cours ...")
-            inverserDirection(garde)
+        let posGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
+        if(posMineur[0]==posGarde[0] && posMineur[1]==posGarde[1] ){
+            console.log(`Mineur ${posMineur} \nGarde ${posGarde}`)
+            objMineur.binDejaPrit = true;
+            arreterAnimation();
         }
     }
 }
@@ -891,7 +1036,6 @@ const comportementGardes = () => {
                 
         chuteGarde(garde);
         detectionCollisionsGarde(garde);   
-        // rebondir(garde);
     }
 }
 
@@ -899,7 +1043,10 @@ const arreterAnimation = () => {
     if(objCycleAnimation != null){
         cancelAnimationFrame(objCycleAnimation);
         objCycleAnimation = null;
-        reDemarrer();
+        if(!objCanvas.hidden){
+            reDemarrer();
+        }
+            
     }
 }
 

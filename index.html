@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="Assets/favicon_MineurEnOr.png" type="image/x-icon">
     <title>Mineur en Or</title>
     <link rel="stylesheet" href="index.css">
     <script src="index.js" ></script>
 </head>
 <body onload="init()">
-    <p><strong>Appuyez sur la touche "s" pour démarrer.</strong></br>Utilisez les flèches pour vous déplacer. </br>Utilisez la touche "z" ou "x" pour faire un trou à droite ou gauche </p> 
+
+        
     <div class="conteneurJeu">
+        <p><strong>Appuyez sur la touche "p" pour démarrer le jeu.</br></br></strong>Utilisez les flèches pour vous déplacer. </br>Utilisez la touche "z" ou "x" pour faire un trou à droite ou gauche </p> 
         <!-- Width et Height seront 2800 x 1700 -->
         <!-- <canvas id="canvasJeu" width="2800" height="1700"> -->
+        <canvas id="canvasMenu" width="560" height="340" onmousemove="animerBouton()" onclick="activerJeu()" ></canvas>
         <canvas id="canvasJeu" width="560" height="340"></canvas>
     </div>
     
