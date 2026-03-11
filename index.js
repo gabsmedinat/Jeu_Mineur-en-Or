@@ -177,8 +177,8 @@ const init = ()=>{
     // objCanvas.height = window.innerHeight;
     objContexte = objCanvas.getContext("2d");
     objContexte.fillRect(0,0,objCanvas.width,objCanvas.height)
-    // longeurCellules = objCanvas.width/nbrColonnes;
-    // largeurCellules = objCanvas.height/nbrLignes;
+    longeurCellules = objCanvas.width/nbrColonnes;
+    largeurCellules = objCanvas.height/nbrLignes;
 
     window.addEventListener('keydown',ecouter)
 
@@ -242,6 +242,10 @@ const ecouter = () =>{
             break;
         case "i": // Touches utilisées pour des fins de déboggage
             console.log(`Le Mineur se trouve dans la cellule ${objMineur.celluleActuelle[0]},${objMineur.celluleActuelle[1]}`)
+            break;
+        case " ":
+
+            console.log(`Le type de cellule où se trouve le Mineur est ${obtenirTypeCellule(objMineur.celluleActuelle[1],objMineur.celluleActuelle[0])}`);
             break;
         case "k":
             console.log(obtenirPositionCelluleDessous(objMineur.celluleActuelle[0],objMineur.celluleActuelle[1]));
@@ -343,7 +347,8 @@ const initGardes = () => {
         objGarde.nom = `Garde_${i}`;
         objGarde.positionX = coordonneesInitiales[0];
         objGarde.positionY = coordonneesInitiales[1];
-        
+        objGarde.cibleDessus = false;
+        objGarde.cibleDessous = false;        
     
         objGarde.vitesse = 1;                                          // TODO: À ajuster une fois en fonction
         objGarde.couleur = ["#D92C54","#ADEED9","#0AC4E0"];
@@ -497,6 +502,8 @@ const dessinerPersonnage = (objPersonnage) => {
     let couleurMineurChapeau = objPersonnage.couleur[2]; 
     
     objContexte.save();
+    objContexte.fillStyle = "red"
+    objContexte.fillRect(debutCellule_X,debutCellule_Y,2,2);
     if(objPersonnage.direction==="droite"){
         objContexte.translate(debutCellule_X,debutCellule_Y)
         objContexte.translate(0, hauteurCellule); 
@@ -610,7 +617,7 @@ const obtenirCoordonneesCellule = (intLigne, intColonne) => {
 
 const obtenirPositionCellule = (fltPosX, fltPosY) => {
     var colonne = Math.ceil((fltPosX / 20) + 1);
-    var ligne = Math.ceil((fltPosY / 20) +1);
+    var ligne = Math.ceil((fltPosY / 20) );
     return [colonne,ligne];
 }
 
@@ -650,10 +657,16 @@ const monterEchelles = (objPersonnage) => {
     }
 }
 
+
+// ACTUEL: J'essaie que les gardes descendent les échelles afin de mettre à jour leur comportament 
+    //où ils doivent descendre les échelles lorsque le Mineur se trouve en dessous 
 const descendreEchelles = (objPersonnage) => {
     let posActuelle = obtenirPositionCellule(objPersonnage.positionX, objPersonnage.positionY);
+    let cote = (objPersonnage.direction==="droite") ? 1 : -1;
     let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
     let posCelluleDessous = obtenirPositionCelluleDessous(objPersonnage);
+    let typeCelluleDevant = obtenirTypeCellule(posActuelle[1],posActuelle[0]+cote);
+    let typeCelluleDessous = obtenirTypeCellule(posActuelle[1]+1,posActuelle[0]);
     
     for(cel of tabObjCellules){
         if(typeCelluleActuelle === "vide" && cel.type === "echelle" && posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne ){
@@ -675,7 +688,7 @@ const deplacementHorizontal = (objPersonnage) =>  {
         if( celluleDevant[0] === cel.colonne+cote && celluleDevant[1] === cel.ligne){
             for(cel of tabObjCellules){
                 if(cel.colonne === posActuelle[0] && cel.ligne === posActuelle[1] && cel.type != "beton" ){
-                    objPersonnage.positionX += objPersonnage.vitesse*cote+(longeurCellules/2);
+                    objPersonnage.positionX += objPersonnage.vitesse*cote;
                 }
             }
         }
@@ -728,12 +741,11 @@ const chute = () => {
     for(cel of tabObjCellules){
         if(posCelluleDessous[0] === cel.colonne && posCelluleDessous[1] === cel.ligne && cel.type != "beton"){
             if(cel.type != "echelle" && typeCelluleActuelle != "barre"){
-                objMineur.binDeplacement = true;
+                // objMineur.binDeplacement = true;
                 objMineur.positionY += objMineur.vitesse;
             }
         }
-    }
-    // objMineur.positionY = objMineur.positionY + 
+    }    
 }
 
 /* Fonction qui sera activée à chaque mise à jour afin de déclencher la chute du Mineur ou d'un garde */
@@ -752,19 +764,27 @@ const chuteGarde = (objGarde) => {
 }
 
 
-const detectionCollisionsGarde = (objGarde) => {
-    let posActuelle = obtenirPositionCellule(objGarde.positionX, objGarde.positionY);
-    let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
-    let cote = (objGarde.direction === "droite")? 1 : -1;
+const detectionCollisionsGarde = (objPersonnage) => {
+    let posGardeActuel = obtenirPositionCellule(objPersonnage.positionX,objPersonnage.positionY);
+    let typeCelluleActuelle = obtenirTypeCellule(posGardeActuel[1],posGardeActuel[0]);
+    let cote = (objPersonnage.direction === "droite")? 1 : -1;
 
     // Ecouteur de collision
     if(typeCelluleActuelle==="beton"){
-        objGarde.positionX -= objGarde.vitesse*5*cote;
+        objPersonnage.positionX -= objPersonnage.vitesse*5*cote;
 
     }
     if(typeCelluleActuelle==="dehors"){
-        objGarde.positionX -= objGarde.vitesse*5*cote;
-        (objGarde.direction=="droite")?objGarde.direction="gauche":objGarde.direction="droite";
+        objPersonnage.positionX -= objPersonnage.vitesse*5*cote;
+        (objPersonnage.direction=="droite")?objPersonnage.direction="gauche":objPersonnage.direction="droite";
+    }
+
+    for(garde of tabObjGardes){
+        let posAutreGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
+        if(posGardeActuel[0]==posAutreGarde[0] && posGardeActuel[1]==posAutreGarde[1] && objPersonnage.nom !== garde.nom){
+            console.log("Inversement en cours ...")
+            inverserDirection(garde)
+        }
     }
 }
 
@@ -778,7 +798,6 @@ const effacer = () => {
 
 const mettreAJour = () => {
     objMineur.celluleActuelle = obtenirPositionCellule(objMineur.positionX, objMineur.positionY);
-    
     chute();
 
     mourir();
@@ -809,6 +828,21 @@ const mourir = () => {
     // }
 }
 
+const rebondir = (objPersonnage) => {
+    let posGardeActuel = obtenirPositionCellule(objPersonnage.positionX,objPersonnage.positionY);
+    for(garde of tabObjGardes){
+        let posAutreGarde = obtenirPositionCellule(garde.positionX,garde.positionY);
+        if(posGardeActuel[0]==posAutreGarde[0] && posGardeActuel[1]==posAutreGarde[1] && objPersonnage.nom !== garde.nom){
+            console.log("Inversement en cours ...")
+            inverserDirection(garde)
+        }
+    }
+}
+
+const inverserDirection = (objPersonnage) => {
+    (objPersonnage.direction === "droite") ? objPersonnage.direction = "gauche":objPersonnage.direction = "droite";
+}
+
 const comportementGardes = () => {
     
     for(garde of tabObjGardes){
@@ -817,14 +851,47 @@ const comportementGardes = () => {
         let typeCelluleActuelle = obtenirTypeCellule(posActuelle[1],posActuelle[0]);
         let typeCelluleDevant = obtenirTypeCellule(posActuelle[1],posActuelle[0]+cote);
         let typeCelluleDessus = obtenirTypeCellule(posActuelle[1]-1,posActuelle[0]);
+        let typeCelluleDessous = obtenirTypeCellule(posActuelle[1]+1,posActuelle[0]);
+
+        if(objMineur.positionY < garde.positionY){
+            garde.cibleDessus = true;
+            garde.cibleDessous = false;
+        }else{
+            garde.cibleDessus = false;
+            garde.cibleDessous = true;
+        }
+
+        if(objMineur.positionY > garde.positionY){
+            garde.cibleDessus = false;
+            garde.cibleDessous = true;
+        }else{
+            garde.cibleDessus = true;
+            garde.cibleDessous = false;
+        }
         
-        chuteGarde(garde);
-        if( typeCelluleActuelle ==="echelle" || (typeCelluleActuelle ==="echelle" && typeCelluleDevant === "beton" && typeCelluleDessus ==="vide")){
-            monterEchelles(garde);
+        
+        if(typeCelluleActuelle === "echelle" || (typeCelluleActuelle==="vide" && typeCelluleDessous==="echelle")){
+            if(garde.cibleDessus ){
+                // console.log("monter");
+                monterEchelles(garde);
+                if(typeCelluleActuelle === "vide"){
+                    deplacementHorizontal(garde);
+                }
+            }
+            if(garde.cibleDessous ){
+                // console.log("descendre");
+                descendreEchelles(garde);
+                if(typeCelluleDessous === "beton" || (typeCelluleActuelle==="echelle" && typeCelluleDessous==="echelle")){
+                    deplacementHorizontal(garde);
+                }
+            }
         }else{
             deplacementHorizontal(garde);
         }
+                
+        chuteGarde(garde);
         detectionCollisionsGarde(garde);   
+        // rebondir(garde);
     }
 }
 
