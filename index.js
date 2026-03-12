@@ -179,20 +179,24 @@ var lstNiveaux = [
     var objMusique;
 
 // Début de la logique
-
-const init = ()=>{
+const debut = () => {
     objCanvasMenu = document.getElementById("canvasMenu");
-    objCanvasMenu.hidden = false;
     objContexteMenu = objCanvasMenu.getContext("2d");
     posTitreCanvas = [objCanvasMenu.width/2, objCanvasMenu.height/4];
     objBoutonMenu = new Object();                   // Cet objet est associé avec le dessin du bouton
+    objCanvasMenu.hidden = false;
     objBoutonMenu.binAnimation = false;
-
     objCanvas = document.getElementById("canvasJeu");
     objCanvas.hidden = true;
+    objContexte = objCanvas.getContext("2d");
+
+    init();
+}
+
+const init = ()=>{   
     // objCanvas.width = window.innerWidth;
     // objCanvas.height = window.innerHeight;
-    objContexte = objCanvas.getContext("2d");
+    
     objContexte.fillRect(0,0,objCanvas.width,objCanvas.height)
     longeurCellules = objCanvas.width/nbrColonnes;
     largeurCellules = objCanvas.height/nbrLignes;
@@ -202,6 +206,7 @@ const init = ()=>{
     tabLingots = initLingots();    
     nbrEnnemis = 3 + niveauActuel;
 
+    
     initNiveau();
     initMineur();
     initGardes();
@@ -214,6 +219,7 @@ const init = ()=>{
     initBouton();           // Initialisé avant pour que ses propriétés soient chargées
     imageDebut();           // Menu de début du Jeu
     animerMenu();
+    
     if(objNiveau.binDemarrage){
         if(nbrVies>0 ){
             animer();
@@ -298,7 +304,7 @@ const ecouter = () =>{
     }
 }
 
-const animerMenu = ()=> {
+const animerMenu = () => {
     effacerImageDebut();
     miseAJourParamsMenu();
     imageDebut();
@@ -333,14 +339,23 @@ const activerJeu = () => {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     if(objBoutonMenu.debutX<objBoutonMenu.souris_x && objBoutonMenu.souris_x<objBoutonMenu.finX & objBoutonMenu.debutY<objBoutonMenu.souris_y && objBoutonMenu.souris_y<objBoutonMenu.finY ){
-        console.log("Je click dedans")
-        objMusique.intro.pause();
-        objMusique.intro.currentTime = 0;
-        objBoutonMenu.binClique = true;
-        objCanvasMenu.hidden = true;
-        objCanvas.hidden = false;
+        objMusique.intro.volume = 0.3;
+        objMusique.sonSelection.play();
+        setTimeout(()=>{
+            objBoutonMenu.binClique = true;
+            objCanvasMenu.hidden = true;
+            objCanvas.hidden = false;
+            objMusique.musique_fond.play();
+            objMusique.musique_fond.volume = 0.3;
+            objMusique.musique_fond.loop = true;
+            objMusique.intro.pause();
+            objMusique.intro.currentTime = 0;
+            arreterAnimation();
+        },3000)
     }
 }
+
+
 
 const miseAJourParamsMenu = () => {
     posTitreCanvas = [objCanvasMenu.width/2+10*Math.random(),objCanvasMenu.height/3+objBoutonMenu.intensiteTitre*Math.random()]
@@ -361,7 +376,7 @@ const initBouton = () => {
     objBoutonMenu.couleurTexte = "#EBE1D1";
     objBoutonMenu.intensiteTitre = 2;
     objBoutonMenu.strTexte = "JOUER";
-    objBoutonMenu.font = "15pt Georgia";
+    objBoutonMenu.font = "20pt Georgia";
     objBoutonMenu.align = "center";
     objBoutonMenu.baseLine = "middle";
     // Propriétés du "boundingBox"
@@ -471,6 +486,11 @@ const initSons = () => {
     objSon.setAttribute('src','/Assets/Musique_fond.mp3');
     objSon.load();
     objMusique.musique_fond = objSon;
+
+    objSon = document.createElement('audio');
+    objSon.setAttribute('src','/Assets/son_Selection.wav');
+    objSon.load();
+    objMusique.sonSelection = objSon;
 }
 
 const initGardes = () => {
@@ -979,6 +999,8 @@ const mourir = () => {
         if(posMineur[0]==posGarde[0] && posMineur[1]==posGarde[1] ){
             console.log(`Mineur ${posMineur} \nGarde ${posGarde}`)
             objMineur.binDejaPrit = true;
+            objMusique.musique_fond.pause();
+            objMusique.musique_fond.currentTime = 0;
             arreterAnimation();
         }
     }
@@ -1057,6 +1079,8 @@ const reDemarrer = () => {
     if(objMineur.binDejaPrit){
         nbrVies--;
         alert("Le Mineur est mort");
+        objMusique.musique_fond.play();
+        objMusique.musique_fond.volume = 0.3;
         init();
     }
 }
