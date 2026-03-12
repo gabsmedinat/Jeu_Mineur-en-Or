@@ -190,6 +190,9 @@ const debut = () => {
     objCanvas.hidden = true;
     objContexte = objCanvas.getContext("2d");
 
+    initBouton();           // Initialisé avant pour que ses propriétés soient chargées
+    imageDebut();           // Menu de début du Jeu
+    initSons();
     init();
 }
 
@@ -209,23 +212,17 @@ const init = ()=>{
     
     initNiveau();
     initMineur();
+    
     initGardes();
     dessinerLingots();
     dessinerNiveau(); 
     dessinerPersonnage(objMineur);
     dessinerGardes();
-    initSons();
 
-    initBouton();           // Initialisé avant pour que ses propriétés soient chargées
-    imageDebut();           // Menu de début du Jeu
     animerMenu();
     
     if(objNiveau.binDemarrage){
-        if(nbrVies>0 ){
-            animer();
-        }else{
-            jeuTermine();
-        }
+        animer();
     }
 }
 
@@ -246,6 +243,7 @@ const ecouter = () =>{
         switch(event.key){
             case "p":
                 objNiveau.binDemarrage = true;
+                objMusique.musique_fond.play();
                 animer();
                 break;
             case "ArrowUp":
@@ -336,23 +334,28 @@ const animerBouton = () => {
 
 const activerJeu = () => {
     const rect = objCanvasMenu.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    
     if(objBoutonMenu.debutX<objBoutonMenu.souris_x && objBoutonMenu.souris_x<objBoutonMenu.finX & objBoutonMenu.debutY<objBoutonMenu.souris_y && objBoutonMenu.souris_y<objBoutonMenu.finY ){
-        objMusique.intro.volume = 0.3;
-        objMusique.sonSelection.play();
+            objMusique.intro.volume = 0.3;
+            objMusique.sonSelection.play();
+        
         setTimeout(()=>{
             objBoutonMenu.binClique = true;
             objCanvasMenu.hidden = true;
             objCanvas.hidden = false;
-            objMusique.musique_fond.play();
-            objMusique.musique_fond.volume = 0.3;
-            objMusique.musique_fond.loop = true;
+
+            if(objMusique.musique_fond.paused){
+                objMusique.musique_fond.play();
+                objMusique.musique_fond.volume = 0.3;
+                objMusique.musique_fond.loop = true;
+            }
             objMusique.intro.pause();
             objMusique.intro.currentTime = 0;
             arreterAnimation();
         },3000)
     }
+    objBoutonMenu.souris_x = null;
+    objBoutonMenu.souris_y = null;
 }
 
 
@@ -751,13 +754,13 @@ const collisionAvecLingot = () => {
 
 const binLingotsAcquis = () => {
     if(tabLingots.length==0){
-        objNiveau.binReussi = true;
         for(let i = 1; i<= 15; i++){
             transformerCellule(i,13,"echelle");
         }
         if(objMineur.celluleActuelle[0]==13){
             objMineur.positionY --;
-            if(objMineur.celluleActuelle[1]==0){
+            if(objMineur.celluleActuelle[1]==1 && objMineur.celluleActuelle[0]===13){
+                objNiveau.binReussi = true;
                 arreterAnimation();
             }
         }
@@ -1078,16 +1081,22 @@ const reDemarrer = () => {
     }
     if(objMineur.binDejaPrit){
         nbrVies--;
-        alert("Le Mineur est mort");
-        objMusique.musique_fond.play();
-        objMusique.musique_fond.volume = 0.3;
-        init();
+
+        if(nbrVies > 0) {
+            alert("Le Mineur est mort ! Vies restantes : " + nbrVies);
+            objMineur.binDejaPrit = false;
+            init(); // On relance le niveau
+        } else {
+            jeuTermine(); // Plus de vies : Game Over !
+        }
     }
 }
 
 const jeuTermine = () => {
-    alert("Le jeu s'est terminé ! Vous recommencerez à partir du Niveau 1");
+    alert("LE JEU S'EST TERMINÉ ! Vous recommencerez à partir du Niveau 1");
     nbrVies=3;
     niveauActuel=1;
+    objMusique.musique_fond.pause();
+    objMusique.musique_fond.currentTime = 0;
     init();
 }
