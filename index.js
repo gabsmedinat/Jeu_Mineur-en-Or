@@ -192,10 +192,10 @@ const debut = () => {
     objCanvas.hidden = true;
     objContexte = objCanvas.getContext("2d");
 
-    // objCanvas.width = window.innerWidth;
-    // objCanvas.height = window.innerHeight;
-    // objCanvasMenu.width = window.innerWidth;
-    // objCanvasMenu.height = window.innerHeight;
+    objCanvas.width = window.innerWidth;
+    objCanvas.height = window.innerHeight;
+    objCanvasMenu.width = window.innerWidth;
+    objCanvasMenu.height = window.innerHeight;
 
     initBouton();           // Initialisé avant pour que ses propriétés soient chargées
     imageDebut();           // Menu de début du Jeu
@@ -484,17 +484,17 @@ const initSons = () => {
     objMusique = new Object();
 
     let objSon = document.createElement('audio');
-    objSon.setAttribute('src','/Assets/lightsaberStrongHum.wav');
+    objSon.setAttribute('src','Assets/lightsaberStrongHum.wav');
     objSon.load();
     objMusique.intro = objSon;
 
     objSon = document.createElement('audio');
-    objSon.setAttribute('src','/Assets/Musique_fond.mp3');
+    objSon.setAttribute('src','Assets/Musique_fond.mp3');
     objSon.load();
     objMusique.musique_fond = objSon;
 
     objSon = document.createElement('audio');
-    objSon.setAttribute('src','/Assets/son_Selection.wav');
+    objSon.setAttribute('src','Assets/son_Selection.wav');
     objSon.load();
     objMusique.sonSelection = objSon;
 }
